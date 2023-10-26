@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import clickSound from './ClickSound.m4a';
 
 function Calculator({ workouts, allowSound }) {
@@ -7,14 +7,32 @@ function Calculator({ workouts, allowSound }) {
   const [speed, setSpeed] = useState(90);
   const [durationBreak, setDurationBreak] = useState(5);
 
-  const duration = (number * sets * speed) / 60 + (sets - 1) * durationBreak;
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    setDuration((number * sets * speed) / 60 + (sets - 1) * durationBreak);
+  }, [number, sets, speed, durationBreak]);
+
+  useEffect(() => {
+    const playSound = function () {
+      if (!allowSound) return;
+      const sound = new Audio(clickSound);
+      sound.play();
+    };
+    playSound();
+  }, [allowSound, duration]);
+
+  // const duration = (number * sets * speed) / 60 + (sets - 1) * durationBreak;
   const mins = Math.floor(duration);
   const seconds = (duration - mins) * 60;
 
-  const playSound = function () {
-    if (!allowSound) return;
-    const sound = new Audio(clickSound);
-    sound.play();
+  const handleIncrement = function () {
+    setDuration((prevDuration) => Math.floor(prevDuration + 1));
+  };
+  const handleDecrement = function () {
+    setDuration((prevDuration) =>
+      prevDuration > 1 ? Math.ceil(prevDuration - 1) : 0,
+    );
   };
 
   return (
@@ -72,13 +90,25 @@ function Calculator({ workouts, allowSound }) {
         </div>
       </form>
       <section>
-        <button onClick={() => {}}>–</button>
+        <button
+          onClick={() => {
+            handleDecrement();
+          }}
+        >
+          –
+        </button>
         <p>
           {mins < 10 && '0'}
           {mins}:{seconds < 10 && '0'}
           {seconds}
         </p>
-        <button onClick={() => {}}>+</button>
+        <button
+          onClick={() => {
+            handleIncrement();
+          }}
+        >
+          +
+        </button>
       </section>
     </>
   );
